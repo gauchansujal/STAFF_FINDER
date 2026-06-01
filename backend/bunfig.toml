@@ -1,0 +1,2 @@
+[dns]
+order = "ipv4first"
