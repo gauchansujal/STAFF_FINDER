@@ -12,7 +12,7 @@ const app = new Elysia()
   
   .use(cors())
 
-   .use(jwt({ name: "jwt", secret: jwtConfig.secret }))
+  .use(jwt({ name: "jwt", secret: jwtConfig.secret }))
   .use(userController)
   .get("/", () => ({
     message: "hello world",

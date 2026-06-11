@@ -1,7 +1,7 @@
 import { Elysia, t } from "elysia";
 import { jwt } from "@elysiajs/jwt";
 import { UserService } from "../services/user.services";
-import { UserType } from "../types/user.types";
+import type { UserType } from "../types/user.types";
 import { jwtConfig } from "../config/index.config";
 import { authMiddleware } from "../middleware/auth.middleware";
 
