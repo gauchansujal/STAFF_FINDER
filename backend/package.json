@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "bun --hot src/index.ts",
+    "seed:admin": "bun src/seed/admin.seed.ts",
     "start": "bun src/index.ts"
   },
   "private": true,

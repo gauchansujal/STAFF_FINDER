@@ -1,48 +1,42 @@
-import { UserRepository } from "../respository/user.respository";
+import { UserRepository } from "../repository/user.repository";
 import type { UserType } from "../types/user.types";
+import type { RegisterDTOType } from "../dto/user.dto";
 import bcrypt from "bcrypt";
 
 export const UserService = {
-  async createUser(data: UserType) {
-  const emailExists = await UserRepository.existsByEmail(data.email);
-  if (emailExists) throw new Error("Email already in use");
+  async createUser(data: RegisterDTOType) {
+    const emailExists = await UserRepository.existsByEmail(data.email);
+    if (emailExists) throw new Error("Email already in use");
 
-  const usernameExists = await UserRepository.existsByUsername(data.username);
-  if (usernameExists) throw new Error("Username already taken");
+    const usernameExists = await UserRepository.existsByUsername(data.username);
+    if (usernameExists) throw new Error("Username already taken");
 
-  const hashedPassword = await bcrypt.hash(data.password, 10);
+    const hashedPassword = await bcrypt.hash(data.password, 10);
 
-  // 👇 Fix: explicitly cast role with fallback
-  const userData: UserType = {
-    ...data,
-    password: hashedPassword,
-    role: data.role ?? "user",  // 👈 resolves undefined to "user"
-  };
+    const userData: UserType = {
+      ...data,
+      password: hashedPassword,
+      role: "user",
+    };
 
-  return await UserRepository.create(userData);
-},
+    return await UserRepository.create(userData);
+  },
 
   async getUserById(id: string) {
     const user = await UserRepository.findById(id);
-    if (!user) {
-      throw new Error("User not found");
-    }
+    if (!user) throw new Error("User not found");
     return user;
   },
 
   async getUserByEmail(email: string) {
     const user = await UserRepository.findByEmail(email);
-    if (!user) {
-      throw new Error("User not found");
-    }
+    if (!user) throw new Error("User not found");
     return user;
   },
 
   async getUserByUsername(username: string) {
     const user = await UserRepository.findByUsername(username);
-    if (!user) {
-      throw new Error("User not found");
-    }
+    if (!user) throw new Error("User not found");
     return user;
   },
 
@@ -55,49 +49,31 @@ export const UserService = {
   },
 
   async updateUser(id: string, data: Partial<UserType>) {
-    // Prevent password update through generic update
     if (data.password) {
       throw new Error("Use changePassword to update password");
     }
 
-    // Check email uniqueness if email is being updated
     if (data.email) {
       const emailExists = await UserRepository.existsByEmail(data.email);
-      if (emailExists) {
-        throw new Error("Email already in use");
-      }
+      if (emailExists) throw new Error("Email already in use");
     }
 
-    // Check username uniqueness if username is being updated
     if (data.username) {
       const usernameExists = await UserRepository.existsByUsername(data.username);
-      if (usernameExists) {
-        throw new Error("Username already taken");
-      }
+      if (usernameExists) throw new Error("Username already taken");
     }
 
     const updated = await UserRepository.update(id, data);
-    if (!updated) {
-      throw new Error("User not found");
-    }
+    if (!updated) throw new Error("User not found");
     return updated;
   },
 
-  async changePassword(
-    id: string,
-    currentPassword: string,
-    newPassword: string
-  ) {
+  async changePassword(id: string, currentPassword: string, newPassword: string) {
     const user = await UserRepository.findById(id);
-    if (!user) {
-      throw new Error("User not found");
-    }
+    if (!user) throw new Error("User not found");
 
-    // Verify current password
     const isMatch = await bcrypt.compare(currentPassword, user.password);
-    if (!isMatch) {
-      throw new Error("Current password is incorrect");
-    }
+    if (!isMatch) throw new Error("Current password is incorrect");
 
     if (currentPassword === newPassword) {
       throw new Error("New password must differ from current password");
@@ -109,22 +85,16 @@ export const UserService = {
 
   async deleteUser(id: string) {
     const user = await UserRepository.findById(id);
-    if (!user) {
-      throw new Error("User not found");
-    }
+    if (!user) throw new Error("User not found");
     return await UserRepository.delete(id);
   },
 
   async validateCredentials(email: string, password: string) {
     const user = await UserRepository.findByEmail(email);
-    if (!user) {
-      throw new Error("Invalid email or password");
-    }
+    if (!user) throw new Error("Invalid email or password");
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      throw new Error("Invalid email or password");
-    }
+    if (!isMatch) throw new Error("Invalid email or password");
 
     return user;
   },

@@ -28,7 +28,7 @@ export const UserRepository = {
     return await UserModel.findByIdAndUpdate(
       new mongoose.Types.ObjectId(id),
       { $set: data },
-      { new: true, runValidators: true }
+      { returnDocument: "after", runValidators: true }  // ✅ fixed
     );
   },
 
@@ -54,7 +54,7 @@ export const UserRepository = {
     return await UserModel.findByIdAndUpdate(
       new mongoose.Types.ObjectId(id),
       { $set: { password: hashedPassword } },
-      { new: true }
+      { returnDocument: "after" }  // ✅ fixed
     );
   },
 };

@@ -4,16 +4,17 @@ import { cors } from "@elysiajs/cors";
 import connectDB from "./database/mongodb";
 import { jwt } from "@elysiajs/jwt";
 import { jwtConfig } from "./config/index.config";
-import { userController } from "./controller/user.controller";
+import { authRouter } from "./router/auth.route";
+import {adminRouter} from "./router/admin/admin.route";
 
 await connectDB();
 
 const app = new Elysia()
   
   .use(cors())
-
   .use(jwt({ name: "jwt", secret: jwtConfig.secret }))
-  .use(userController)
+  .use(authRouter)
+  .use(adminRouter)
   .get("/", () => ({
     message: "hello world",
     status: "ok",
