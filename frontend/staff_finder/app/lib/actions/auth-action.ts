@@ -18,6 +18,16 @@ export interface UserResponseDTO {
   updatedAt: string;
 }
 
+function decodeJwt(token: string): { role?: string } {
+  try {
+    const base64  = token.split(".")[1];
+    const decoded = JSON.parse(Buffer.from(base64, "base64").toString("utf-8"));
+    return decoded;
+  } catch {
+    return {};
+  }
+}
+
 export async function registerAction(
   payload: RegisterDTOType
 ): Promise<{ success: boolean; message: string }> {
@@ -31,12 +41,9 @@ export async function registerAction(
 
 export async function loginAction(
   payload: LoginDTOType
-): Promise<{ success: boolean; message: string; user?: UserResponseDTO }> {
-  console.log("API URL:", process.env.NEXT_PUBLIC_API_URL); // 👈 ADD
-  console.log("PAYLOAD:", payload);                          // 👈 ADD
+): Promise<{ success: boolean; message: string; user?: { role: string } }> {
   try {
     const result = await apiLogin(payload);
-
     console.log("LOGIN RESPONSE:", JSON.stringify(result, null, 2));
 
     const token = result.token ?? (result.data as any)?.token;
@@ -45,16 +52,27 @@ export async function loginAction(
       return { success: false, message: "No token returned from server." };
     }
 
+    // decode role from JWT — backend only puts id+role in token
+    const decoded = decodeJwt(token);
+    const role    = decoded?.role ?? result.data?.role;
+
+    console.log("DECODED ROLE:", role);
+
+    // set cookie
     const cookieStore = await cookies();
     cookieStore.set(TOKEN_KEY, token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure:   process.env.NODE_ENV === "production",
       sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
+      path:     "/",
+      maxAge:   60 * 60 * 24 * 7,
     });
 
-    return { success: true, message: result.message, user: result.data };
+    return {
+      success: true,
+      message: result.message ?? "Login successful",
+      user:    { role: role ?? "user" },
+    };
   } catch (error: any) {
     return { success: false, message: error.message };
   }
