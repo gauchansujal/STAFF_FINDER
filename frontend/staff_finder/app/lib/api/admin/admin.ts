@@ -9,10 +9,10 @@ async function getToken(): Promise<string> {
 }
 
 export interface User {
- _id:       string;
-  id:        string; // mapped from _id
-  username:  string;
-  email:     string;
+  _id:        string;
+  id:         string;
+  username:   string;
+  email:      string;
   firstname?: string;
   lastname?:  string;
   image?:     string;
@@ -22,98 +22,75 @@ export interface User {
 }
 
 export interface CreateUserPayload {
-  email: string;
-  password: string;
-  username: string;
+  email:      string;
+  password:   string;
+  username:   string;
   firstName?: string;
-  lastName?: string;
-  image?: { uri: string; name: string; type: string };
+  lastName?:  string;
 }
 
 export interface UpdateUserPayload {
-  name?: string;
-  email?: string;
-  username?: string;
+  email?:     string;
+  username?:  string;
   firstName?: string;
-  lastName?: string;
-  image?: { uri: string; name: string; type: string };
+  lastName?:  string;
 }
 
 export interface ChangePasswordPayload {
   currentPassword: string;
-  newPassword: string;
+  newPassword:     string;
 }
 
-// POST /auth/register — public
+// POST /auth/register — create user
 export const createUser = async (payload: CreateUserPayload): Promise<any> => {
-  const formData = new FormData();
-  formData.append("email",    payload.email);
-  formData.append("password", payload.password);
-  formData.append("username", payload.username);
-  if (payload.firstName) formData.append("firstName", payload.firstName);
-  if (payload.lastName)  formData.append("lastName",  payload.lastName);
-  if (payload.image) {
-    formData.append("image", {
-      uri:  payload.image.uri,
-      name: payload.image.name,
-      type: payload.image.type,
-    } as any);
-  }
-  const response = await publicAxios.post(ENDPOINTS.AUTH.REGISTER, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  const body = {
+    email:     payload.email,
+    password:  payload.password,
+    username:  payload.username,
+    firstname: payload.firstName,
+    lastname:  payload.lastName,
+  };
+  console.log("CREATE USER BODY:", JSON.stringify(body, null, 2));
+  const response = await publicAxios.post(ENDPOINTS.AUTH.REGISTER, body);
   return response.data;
 };
 
-// GET /users
+// GET /admin/users
 export const getAllUsers = async (): Promise<any> => {
   const token    = await getToken();
   const response = await withToken(token).get(ENDPOINTS.ADMIN.USERS.GET_ALL);
   return response.data;
 };
 
-// GET /users/:id
+// GET /admin/users/:id
 export const getUserById = async (id: string): Promise<any> => {
   const token    = await getToken();
   const response = await withToken(token).get(ENDPOINTS.ADMIN.USERS.GET_BY_ID(id));
   return response.data;
 };
 
-// GET /users/role/:role
+// GET /admin/users/role/:role
 export const getUsersByRole = async (role: "admin" | "user"): Promise<any> => {
   const token    = await getToken();
   const response = await withToken(token).get(ENDPOINTS.ADMIN.USERS.GET_BY_ROLE(role));
   return response.data;
 };
 
-// PUT /users/:id
+// PATCH /admin/users/:id
 export const updateUser = async (id: string, payload: UpdateUserPayload): Promise<any> => {
   const token = await getToken();
-  const http  = withToken(token);
-
-  if (payload.image) {
-    const formData = new FormData();
-    if (payload.name)      formData.append("name",      payload.name);
-    if (payload.email)     formData.append("email",     payload.email);
-    if (payload.username)  formData.append("username",  payload.username);
-    if (payload.firstName) formData.append("firstName", payload.firstName);
-    if (payload.lastName)  formData.append("lastName",  payload.lastName);
-    formData.append("image", {
-      uri:  payload.image.uri,
-      name: payload.image.name,
-      type: payload.image.type,
-    } as any);
-    const response = await http.put(ENDPOINTS.ADMIN.USERS.UPDATE(id), formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    return response.data;
-  }
-
-  const response = await http.put(ENDPOINTS.ADMIN.USERS.UPDATE(id), payload);
+  const body  = {
+    ...(payload.email     && { email:     payload.email }),
+    ...(payload.username  && { username:  payload.username }),
+    ...(payload.firstName && { firstname: payload.firstName }),
+    ...(payload.lastName  && { lastname:  payload.lastName }),
+  };
+  console.log("UPDATE USER BODY:", JSON.stringify(body, null, 2));
+  const response = await withToken(token).patch(ENDPOINTS.ADMIN.USERS.UPDATE(id), body);
   return response.data;
 };
 
-// PATCH /users/:id/change-password
+// PATCH /admin/users/:id/change-password
 export const changeUserPassword = async (
   id: string,
   payload: ChangePasswordPayload
@@ -126,7 +103,7 @@ export const changeUserPassword = async (
   return response.data;
 };
 
-// DELETE /users/:id
+// DELETE /admin/users/:id
 export const deleteUser = async (id: string): Promise<any> => {
   const token    = await getToken();
   const response = await withToken(token).delete(ENDPOINTS.ADMIN.USERS.DELETE(id));

@@ -7,10 +7,12 @@ export const ENDPOINTS = {
   },
 ADMIN:{
   USERS: {
+    // CREATE: `${BASE_URL}/users`,
     GET_ALL:         `${BASE_URL}/admin/users`,
     GET_BY_ID:       (id: string) => `${BASE_URL}/admin/users/${id}`,
     GET_BY_ROLE:     (role: "admin" | "user") => `${BASE_URL}/admin/users/role/${role}`,
-    UPDATE:          (id: string) => `${BASE_URL}/admin/users/${id}/role`,
+    UPDATE_ROLE:     (id: string) => `${BASE_URL}/admin/users/${id}/role`,
+    UPDATE:     (id: string) => `${BASE_URL}/admin/users/${id}`,
     CHANGE_PASSWORD: (id: string) => `${BASE_URL}/admin/users/${id}/change-password`,
     DELETE:          (id: string) => `${BASE_URL}/admin/users/${id}`,
   },
