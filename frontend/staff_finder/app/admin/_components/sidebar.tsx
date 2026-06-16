@@ -14,7 +14,7 @@ import { logoutAction } from "@/app/lib/actions/auth-action";
 
 const navItems = [
   { label: "Overview",     href: "/admin",              icon: LayoutDashboard },
-  { label: "Vacancies",    href: "/admin/vacancies",    icon: Briefcase },
+  { label: "Vacancy",    href: "/admin/vacancy",    icon: Briefcase },
   { label: "Users",        href: "/admin/user",         icon: Users },
   { label: "Applications", href: "/admin/applications", icon: FileText },
   { label: "Settings",     href: "/admin/settings",     icon: Settings },

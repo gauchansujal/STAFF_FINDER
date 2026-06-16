@@ -1,6 +1,7 @@
 "use client";
 
 import { Bell } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface Props {
   user: {
@@ -10,6 +11,8 @@ interface Props {
 }
 
 export default function AdminHeader({ user }: Props) {
+  const router = useRouter();
+
   function initials(name: string) {
     if (!name) return "A";
     return name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
@@ -38,7 +41,10 @@ export default function AdminHeader({ user }: Props) {
       <div className="flex items-center gap-4">
 
         {/* Post Vacancy button */}
-        <button className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors active:scale-95">
+        <button
+          onClick={() => router.push("/admin/vacancy/create")} // ✅ navigate with query param
+          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors active:scale-95"
+        >
           <span className="text-lg leading-none">+</span>
           Post Vacancy
         </button>
