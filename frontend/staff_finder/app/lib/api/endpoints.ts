@@ -1,3 +1,4 @@
+import { Beaker } from "lucide-react";
 
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
@@ -7,6 +8,7 @@ export const ENDPOINTS = {
     REGISTER: `${BASE_URL}/auth/register`,
     LOGIN: `${BASE_URL}/auth/login`,
   },
+  UPLOAD:`${BASE_URL}/upload`,
   ADMIN: {
     USERS: {
       GET_ALL: `${BASE_URL}/admin/users`,

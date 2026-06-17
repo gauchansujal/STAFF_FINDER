@@ -11,22 +11,21 @@ import {
   UpdateUserPayload,
   ChangePasswordPayload,
   CreateUserPayload,
-  User,
 } from "@/app/lib/api/admin/admin";
-
 
 function normalizeUser(u: any) {
   return {
     ...u,
-    id:   u._id ?? u.id,
-    name: `${u.firstname ?? ""} ${u.lastname ?? ""}`.trim() || u.username,
+    id:       u._id ?? u.id,
+    name:     `${u.firstname ?? ""} ${u.lastname ?? ""}`.trim() || u.username,
+    imageUrl: u.imageUrl ?? u.image ?? "", // ✅
   };
 }
 
 function extractUsers(data: any) {
-  if (Array.isArray(data))              return data.map(normalizeUser);
-  if (Array.isArray(data?.data))        return data.data.map(normalizeUser);
-  if (Array.isArray(data?.users))       return data.users.map(normalizeUser);
+  if (Array.isArray(data))          return data.map(normalizeUser);
+  if (Array.isArray(data?.data))    return data.data.map(normalizeUser);
+  if (Array.isArray(data?.users))   return data.users.map(normalizeUser);
   return [];
 }
 
@@ -37,7 +36,7 @@ function extractUser(data: any) {
 
 export async function getAllUsersAction() {
   try {
-    const raw = await getAllUsers();
+    const raw   = await getAllUsers();
     const users = extractUsers(raw);
     return { success: true, data: users };
   } catch (error: any) {

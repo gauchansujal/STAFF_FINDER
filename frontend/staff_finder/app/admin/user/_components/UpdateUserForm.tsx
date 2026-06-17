@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { UpdateUserSchema, UpdateUserData } from "../create/schema";
 import { updateUserAction } from "@/app/lib/actions/admin/admin-actions";
 import { User } from "@/app/lib/api/admin/admin";
+import { ENDPOINTS } from "@/app/lib/api/endpoints";
 import { useState } from "react";
 
 interface Props {
@@ -14,30 +15,75 @@ interface Props {
 }
 
 export default function UpdateUserForm({ user, onSuccess, onCancel }: Props) {
-  const [error, setError] = useState("");
-  const [preview, setPreview] = useState<string | null>(user.image ?? null);
+  const [error, setError]     = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [preview, setPreview] = useState<string | null>(
+    (user as any).imageUrl ?? user.image ?? null // ✅ support both fields
+  );
+  const [uploadedUrl, setUploadedUrl] = useState<string>(
+    (user as any).imageUrl ?? user.image ?? ""
+  );
 
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors, isSubmitting, dirtyFields },
   } = useForm<UpdateUserData>({
     resolver: zodResolver(UpdateUserSchema),
     defaultValues: {
-      firstName: user.firstName ?? "",
-      lastName:  user.lastName  ?? "",
+      firstName: (user as any).firstname ?? "",
+      lastName:  (user as any).lastname  ?? "",
       username:  user.username  ?? "",
       email:     user.email,
     },
   });
 
+  // ✅ upload image to server immediately on select
+  async function handleImage(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // show preview instantly
+    setPreview(URL.createObjectURL(file));
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res  = await fetch(ENDPOINTS.UPLOAD, { method: "POST", body: formData });
+      const data = await res.json();
+      if (data.success) {
+        setUploadedUrl(data.url); // ✅ store real URL
+      } else {
+        setError("Image upload failed");
+      }
+    } catch {
+      setError("Image upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   async function onSubmit(data: UpdateUserData) {
     setError("");
-    // only send fields that were actually changed
-    const dirty = Object.fromEntries(
-      Object.keys(dirtyFields).map((k) => [k, data[k as keyof UpdateUserData]])
-    );
+
+    // ✅ only send dirty (changed) fields
+    const dirty: Record<string, any> = {};
+    Object.keys(dirtyFields).forEach((k) => {
+      dirty[k] = data[k as keyof UpdateUserData];
+    });
+
+    // ✅ include imageUrl only if a new image was uploaded
+    if (uploadedUrl && uploadedUrl !== ((user as any).imageUrl ?? user.image ?? "")) {
+      dirty.imageUrl = uploadedUrl;
+    }
+
+    // nothing changed
+    if (Object.keys(dirty).length === 0) {
+      onSuccess?.();
+      return;
+    }
+
     const res = await updateUserAction(user.id, dirty);
     if (res.success) {
       onSuccess?.();
@@ -46,23 +92,19 @@ export default function UpdateUserForm({ user, onSuccess, onCancel }: Props) {
     }
   }
 
-  function handleImage(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setValue("image", file, { shouldValidate: true, shouldDirty: true });
-    setPreview(URL.createObjectURL(file));
-  }
+  const displayInitials = `${(user as any).firstname?.[0] ?? ""}${(user as any).lastname?.[0] ?? ""}`.toUpperCase() || "U";
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+
       {/* Avatar */}
       <div className="flex items-center gap-4">
         <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
           {preview ? (
             <img src={preview} alt="preview" className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full bg-blue-100 text-blue-700 flex items-center justify-center text-lg font-medium">
-              {user.name.slice(0, 2).toUpperCase()}
+            <div className="w-full h-full bg-orange-100 text-orange-600 flex items-center justify-center text-lg font-semibold">
+              {displayInitials}
             </div>
           )}
         </div>
@@ -74,8 +116,10 @@ export default function UpdateUserForm({ user, onSuccess, onCancel }: Props) {
             type="file"
             accept="image/jpeg,image/jpg,image/png,image/webp"
             onChange={handleImage}
+            disabled={uploading}
             className="text-sm"
           />
+          {uploading && <p className="text-xs text-gray-400 mt-1">Uploading...</p>}
           {errors.image && (
             <p className="text-xs text-red-500 mt-1">{errors.image.message}</p>
           )}
@@ -144,7 +188,7 @@ export default function UpdateUserForm({ user, onSuccess, onCancel }: Props) {
         )}
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || uploading}
           className="bg-foreground text-background rounded-md px-4 py-1.5 text-sm font-medium disabled:opacity-50"
         >
           {isSubmitting ? "Saving…" : "Save changes"}

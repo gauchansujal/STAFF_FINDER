@@ -16,6 +16,7 @@ export interface User {
   firstname?: string;
   lastname?:  string;
   image?:     string;
+  imageUrl?:  string; // ✅
   role:       "admin" | "user";
   createdAt:  string;
   updatedAt:  string;
@@ -27,6 +28,7 @@ export interface CreateUserPayload {
   username:   string;
   firstName?: string;
   lastName?:  string;
+  imageUrl?:  string; // ✅ added
 }
 
 export interface UpdateUserPayload {
@@ -34,6 +36,7 @@ export interface UpdateUserPayload {
   username?:  string;
   firstName?: string;
   lastName?:  string;
+  imageUrl?:  string; // ✅
 }
 
 export interface ChangePasswordPayload {
@@ -49,6 +52,7 @@ export const createUser = async (payload: CreateUserPayload): Promise<any> => {
     username:  payload.username,
     firstname: payload.firstName,
     lastname:  payload.lastName,
+    ...(payload.imageUrl && { imageUrl: payload.imageUrl }), // ✅ added
   };
   console.log("CREATE USER BODY:", JSON.stringify(body, null, 2));
   const response = await publicAxios.post(ENDPOINTS.AUTH.REGISTER, body);
@@ -84,6 +88,7 @@ export const updateUser = async (id: string, payload: UpdateUserPayload): Promis
     ...(payload.username  && { username:  payload.username }),
     ...(payload.firstName && { firstname: payload.firstName }),
     ...(payload.lastName  && { lastname:  payload.lastName }),
+    ...(payload.imageUrl  && { imageUrl:  payload.imageUrl }), // ✅
   };
   console.log("UPDATE USER BODY:", JSON.stringify(body, null, 2));
   const response = await withToken(token).patch(ENDPOINTS.ADMIN.USERS.UPDATE(id), body);

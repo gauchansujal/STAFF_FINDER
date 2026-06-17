@@ -40,5 +40,7 @@ export const adminRouter = new Elysia({ prefix: "/admin" })
   .get("/users",             AdminController.getAllUsers)
   .get("/users/:id",         AdminController.getUserById)
   .patch("/users/:id/role",  AdminController.updateUserRole)
-  .delete("/users/:id",      AdminController.deleteUser)
+  .delete("/users/:id",                 AdminController.deleteUser)
+  .patch("/users/:id",                  AdminController.updateUser)       // ✅ NEW
+
   .get("/users/role/:role",  AdminController.getUsersByRole);

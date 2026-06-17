@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { z } from "zod";
+import { ENDPOINTS } from "@/app/lib/api/endpoints";
 
 const RegisterDTO = z.object({
   firstname: z.string().min(1, "First name is required"),
@@ -21,9 +22,11 @@ interface RegisterFormProps {
 }
 
 export default function RegisterForm({ onSubmit }: RegisterFormProps) {
-  const [showPassword, setShowPassword] = useState(false);
-  const [serverError, setServerError]   = useState<string | null>(null);
+  const [showPassword, setShowPassword]   = useState(false);
+  const [serverError, setServerError]     = useState<string | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [uploading, setUploading]         = useState(false); // ✅
+  const [uploadedUrl, setUploadedUrl]     = useState<string>("");  // ✅
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -45,16 +48,34 @@ export default function RegisterForm({ onSubmit }: RegisterFormProps) {
     .replace(/\s+/g, "_")
     .replace(/[^a-z0-9_]/g, "");
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // ✅ upload image immediately on file select
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // show preview instantly
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      const result = ev.target?.result as string;
-      setAvatarPreview(result);
-      setValue("imageUrl", result, { shouldValidate: false });
-    };
+    reader.onload = (ev) => setAvatarPreview(ev.target?.result as string);
     reader.readAsDataURL(file);
+
+    // upload to server
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res  = await fetch(ENDPOINTS.UPLOAD, { method: "POST", body: formData });
+      const data = await res.json();
+      if (data.success) {
+        setUploadedUrl(data.url);           // ✅ store real URL
+        setValue("imageUrl", data.url);     // ✅ set into form
+      } else {
+        setServerError("Image upload failed");
+      }
+    } catch {
+      setServerError("Image upload failed");
+    } finally {
+      setUploading(false);
+    }
   };
 
   const onFormSubmit = async (data: RegisterDTOType) => {
@@ -66,7 +87,7 @@ export default function RegisterForm({ onSubmit }: RegisterFormProps) {
       lastname:  data.lastname.trim(),
       email:     data.email,
       password:  data.password,
-      ...(avatarPreview ? { imageUrl: avatarPreview } : {}),
+      ...(uploadedUrl ? { imageUrl: uploadedUrl } : {}), // ✅ use real URL
     };
     try {
       await onSubmit?.(payload);
@@ -92,6 +113,7 @@ export default function RegisterForm({ onSubmit }: RegisterFormProps) {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
             className="relative w-20 h-20 rounded-full border-2 border-black bg-gray-100 overflow-hidden cursor-pointer group focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
             aria-label="Upload profile photo"
           >
@@ -111,7 +133,9 @@ export default function RegisterForm({ onSubmit }: RegisterFormProps) {
             </span>
           </button>
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-          <p className="mt-2 text-xs text-gray-400">Click to upload photo</p>
+          <p className="mt-2 text-xs text-gray-400">
+            {uploading ? "Uploading..." : "Click to upload photo"} {/* ✅ */}
+          </p>
         </div>
 
         <div className="px-8 pb-8">
@@ -191,22 +215,18 @@ export default function RegisterForm({ onSubmit }: RegisterFormProps) {
               {/* Submit */}
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || uploading} // ✅ disable while uploading
                 className={`w-full py-3 bg-black text-white text-sm font-semibold rounded-lg border border-black transition-colors mt-2
-                  ${isSubmitting ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:bg-gray-800 active:bg-gray-900"}`}
+                  ${isSubmitting || uploading ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:bg-gray-800 active:bg-gray-900"}`}
               >
                 {isSubmitting ? "Creating account…" : "Create Account"}
               </button>
             </div>
           </form>
 
-          {/* Navigate to Login */}
           <p className="text-center text-sm text-gray-500 mt-6">
             Already have an account?{" "}
-            <Link
-              href="/auth/login"
-              className="text-black font-semibold underline text-sm hover:text-gray-700 transition-colors"
-            >
+            <Link href="/auth/login" className="text-black font-semibold underline text-sm hover:text-gray-700 transition-colors">
               Sign in
             </Link>
           </p>

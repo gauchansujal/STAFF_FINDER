@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import { User } from "@/app/lib/api/admin/admin";
 
 interface Props {
@@ -8,7 +9,11 @@ interface Props {
   onDelete: (id: string) => void;
 }
 
+const PAGE_SIZE = 8; // ✅ adjust as needed
+
 export default function UserTable({ users, onEdit, onDelete }: Props) {
+  const [page, setPage] = useState(1); // ✅
+
   function initials(name?: string) {
     if (!name || typeof name !== "string" || !name.trim()) return "?";
     return name.trim().split(" ").filter(Boolean)
@@ -25,6 +30,25 @@ export default function UserTable({ users, onEdit, onDelete }: Props) {
     return (u as any).name ||
       `${(u as any).firstname ?? ""} ${(u as any).lastname ?? ""}`.trim() ||
       u.username;
+  }
+
+  function getImage(u: User) {
+    const url = (u as any).imageUrl || u.image || null;
+    if (!url || url.includes("example.com")) return null;
+    return url;
+  }
+
+  // ✅ pagination calculations
+  const totalPages = Math.max(1, Math.ceil(users.length / PAGE_SIZE));
+  const safePage   = Math.min(page, totalPages); // ✅ clamp if list shrinks after delete
+
+  const paginatedUsers = useMemo(() => {
+    const start = (safePage - 1) * PAGE_SIZE;
+    return users.slice(start, start + PAGE_SIZE);
+  }, [users, safePage]);
+
+  function goTo(p: number) {
+    setPage(Math.min(Math.max(1, p), totalPages));
   }
 
   return (
@@ -48,9 +72,10 @@ export default function UserTable({ users, onEdit, onDelete }: Props) {
               </td>
             </tr>
           ) : (
-            users.map((u) => {
-              const name = displayName(u);
-              const id   = (u as any)._id ?? u.id;
+            paginatedUsers.map((u) => { // ✅ use paginatedUsers instead of users
+              const name  = displayName(u);
+              const id    = (u as any)._id ?? u.id;
+              const image = getImage(u);
               return (
                 <tr
                   key={id}
@@ -59,17 +84,24 @@ export default function UserTable({ users, onEdit, onDelete }: Props) {
                   {/* User */}
                   <td className="px-4 py-3.5">
                     <div className="flex items-center gap-2.5">
-                      {u.image ? (
-                        <img
-                          src={u.image}
-                          alt={name}
-                          className="w-9 h-9 rounded-full object-cover shrink-0"
-                        />
-                      ) : (
-                        <div className="w-9 h-9 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold shrink-0">
+
+                      {/* Avatar — initials as background, image on top */}
+                      <div className="relative w-9 h-9 shrink-0">
+                        <div className="w-9 h-9 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold absolute inset-0">
                           {initials(name)}
                         </div>
-                      )}
+                        {image && (
+                          <img
+                            src={image}
+                            alt={name}
+                            className="w-9 h-9 rounded-full object-cover absolute inset-0"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = "none";
+                            }}
+                          />
+                        )}
+                      </div>
+
                       <div>
                         <p className="font-bold text-gray-900 leading-tight">{name}</p>
                         <p className="text-xs text-gray-500 mt-0.5">{u.email}</p>
@@ -128,6 +160,47 @@ export default function UserTable({ users, onEdit, onDelete }: Props) {
           )}
         </tbody>
       </table>
+
+      {/* ✅ Pagination controls */}
+      {users.length > PAGE_SIZE && (
+        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-100">
+          <p className="text-xs text-gray-500 font-medium">
+            Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, users.length)} of {users.length}
+          </p>
+
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => goTo(safePage - 1)}
+              disabled={safePage === 1}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              Prev
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <button
+                key={p}
+                onClick={() => goTo(p)}
+                className={`w-7 h-7 rounded-lg text-xs font-semibold transition-colors ${
+                  p === safePage
+                    ? "bg-orange-500 text-white"
+                    : "text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+
+            <button
+              onClick={() => goTo(safePage + 1)}
+              disabled={safePage === totalPages}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

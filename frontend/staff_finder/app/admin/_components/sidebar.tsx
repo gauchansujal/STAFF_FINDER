@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import {
   LayoutDashboard,
   Briefcase,
@@ -11,6 +12,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { logoutAction } from "@/app/lib/actions/auth-action";
+import ImageLightbox from "./ImageLightBox"; // ✅ adjust path if needed
 
 const navItems = [
   { label: "Overview",     href: "/admin",              icon: LayoutDashboard },
@@ -22,15 +24,17 @@ const navItems = [
 
 interface Props {
   user: {
-    name?:  string;
-    role?:  string;
-    image?: string;
+    name?:     string;
+    role?:     string;
+    image?:    string;
+    imageUrl?: string; // ✅
   };
 }
 
 export default function Sidebar({ user }: Props) {
   const pathname = usePathname();
   const router   = useRouter();
+  const [showLightbox, setShowLightbox] = useState(false); // ✅
 
   function initials(name?: string) {
     if (!name || typeof name !== "string" || name.trim() === "") return "A";
@@ -51,16 +55,20 @@ export default function Sidebar({ user }: Props) {
 
   const displayName = user?.name?.trim() || "Admin";
   const displayRole = user?.role ?? "Admin";
+  const photo       = user?.imageUrl || user?.image; // ✅
 
   return (
     <aside className="w-64 min-h-screen bg-white rounded-2xl shadow-sm p-6 flex flex-col shrink-0">
 
       {/* Avatar + user info */}
       <div className="flex flex-col items-center text-center mb-6">
-        <div className="w-20 h-20 rounded-full overflow-hidden mb-3 ring-2 ring-orange-100">
-          {user?.image ? (
+        <button
+          onClick={() => photo && setShowLightbox(true)} // ✅ only opens if there's an actual photo
+          className={`w-20 h-20 rounded-full overflow-hidden mb-3 ring-2 ring-orange-100 ${photo ? "cursor-pointer hover:ring-orange-300 transition-all" : ""}`}
+        >
+          {photo ? (
             <img
-              src={user.image}
+              src={photo}
               alt={displayName}
               className="w-full h-full object-cover"
             />
@@ -69,7 +77,7 @@ export default function Sidebar({ user }: Props) {
               {initials(displayName)}
             </div>
           )}
-        </div>
+        </button>
         <p className="font-semibold text-gray-900 text-base leading-tight">
           {displayName}
         </p>
@@ -116,6 +124,14 @@ export default function Sidebar({ user }: Props) {
         Logout
       </button>
 
+      {/* ✅ Lightbox */}
+      {showLightbox && photo && (
+        <ImageLightbox
+          src={photo}
+          alt={displayName}
+          onClose={() => setShowLightbox(false)}
+        />
+      )}
     </aside>
   );
 }
