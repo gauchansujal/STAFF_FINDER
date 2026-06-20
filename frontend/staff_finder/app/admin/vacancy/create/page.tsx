@@ -15,8 +15,8 @@ export default function CreateVacancyPage() {
         >
           ← Back
         </button>
-        <h1 className="text-xl font-semibold">Post a Vacancy</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
+        <h1 className="text-xl text-black font-semibold">Post a Vacancy</h1>
+        <p className="text-sm text-black text-muted-foreground mt-0.5">
           Fill in the details to post a new job vacancy
         </p>
       </div>

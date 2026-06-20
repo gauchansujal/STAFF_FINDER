@@ -1,18 +1,64 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "./_components/footer";
 import Header from "./_components/header";
 import { Briefcase, UserPlus, TrendingUp, X } from "lucide-react";
+import { getAllVacanciesAction } from "@/app/lib/actions/vacancy-action";
+import { Vacancy } from "@/app/lib/api/vacancy";
 
 export default function Home() {
   const [showPopup, setShowPopup] = useState(false);
   const router = useRouter();
 
+  // ── Real stats, derived from actual vacancy data ──
+  const [activeJobs, setActiveJobs]     = useState<number | null>(null);
+  const [restaurants, setRestaurants]   = useState<number | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadStats() {
+      const res = await getAllVacanciesAction();
+      if (!mounted || !res.success || !res.data) return;
+
+      const vacancies: Vacancy[] = res.data;
+
+      // Active Jobs = total number of vacancy postings
+      setActiveJobs(vacancies.length);
+
+      // Restaurants = count of unique restaurant names
+      const uniqueRestaurants = new Set(
+        vacancies
+          .map((v) => v.RestaurantName?.trim().toLowerCase())
+          .filter(Boolean)
+      );
+      setRestaurants(uniqueRestaurants.size);
+    }
+
+    loadStats();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const handleProtectedClick = () => {
     setShowPopup(true);
   };
+
+  // Format counts with a "+" suffix once loaded, "—" while loading
+  function formatCount(n: number | null): string {
+    if (n === null) return "—";
+    return `${n.toLocaleString()}${n > 0 ? "+" : ""}`;
+  }
+
+  const stats = [
+    { value: formatCount(activeJobs),   label: "Active Jobs" },
+    { value: formatCount(restaurants),  label: "Restaurants" },
+    { value: "15,000+",                 label: "Job Seekers" },   // unchanged for now
+    { value: "98%",                     label: "Success Rate" },  // unchanged for now
+  ];
 
   return (
     <div className="min-h-screen flex flex-col bg-[#faf8f5]">
@@ -62,7 +108,7 @@ export default function Home() {
                 <TrendingUp size={20} className="text-orange-500" />
               </div>
               <div>
-                <p className="text-xl font-bold text-[#1a1a18]">2,500+</p>
+                <p className="text-xl font-bold text-[#1a1a18]">{formatCount(activeJobs)}</p>
                 <p className="text-sm text-[#888680]">Active Jobs</p>
               </div>
             </div>
@@ -72,12 +118,7 @@ export default function Home() {
         {/* Stats Section */}
         <section className="bg-[#131c2e] py-12 mt-10">
           <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 px-10 text-center">
-            {[
-              { value: "2,500+", label: "Active Jobs" },
-              { value: "1,200+", label: "Restaurants" },
-              { value: "15,000+", label: "Job Seekers" },
-              { value: "98%", label: "Success Rate" },
-            ].map((stat, i) => (
+            {stats.map((stat, i) => (
               <div key={i} className="flex flex-col gap-1">
                 <p className="text-3xl font-bold text-orange-500">{stat.value}</p>
                 <p className="text-sm text-[#8a95a8]">{stat.label}</p>

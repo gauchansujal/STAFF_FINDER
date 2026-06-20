@@ -112,7 +112,7 @@ export default function VacancyPage() {
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl p-6 w-[580px] shadow-xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl p-6 w-[580px] shadow-xl max-h-[30vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-base font-semibold text-gray-900">{title}</h2>
           <button

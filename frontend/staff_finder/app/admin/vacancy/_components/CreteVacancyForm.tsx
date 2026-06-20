@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { createVacancyAction } from "@/app/lib/actions/vacancy-action";
 import { useState, useRef } from "react";
-import { ImageIcon, X } from "lucide-react";
+import { ImageIcon, X, Loader2 } from "lucide-react";
 
 const CreateVacancySchema = z.object({
   RestaurantName: z.string().min(1, "Restaurant name is required"),
@@ -25,10 +25,16 @@ interface Props {
   onCancel?:  () => void;
 }
 
+const UPLOAD_URL = process.env.NEXT_PUBLIC_API_URL
+  ? `${process.env.NEXT_PUBLIC_API_URL}/upload`
+  : "/upload";
+
 export default function CreateVacancyForm({ onSuccess, onCancel }: Props) {
-  const [error, setError]           = useState("");
+  const [error, setError]               = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const fileInputRef                = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading]   = useState(false);
+  const [uploadError, setUploadError]   = useState("");
+  const fileInputRef                    = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -41,16 +47,45 @@ export default function CreateVacancyForm({ onSuccess, onCancel }: Props) {
       jobType:      "full-time",
       applications: 0,
       salary:       0,
+      imageUrl:     "",
     },
   });
 
-  function handleImageFile(file: File) {
+  async function handleImageFile(file: File) {
     if (!file.type.startsWith("image/")) return;
+
+    setUploadError("");
     const objectUrl = URL.createObjectURL(file);
     setImagePreview(objectUrl);
-    // If you want to upload to a server and get a URL, do it here.
-    // For now we store the local blob preview and clear imageUrl field.
-    setValue("imageUrl", "");
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch(UPLOAD_URL, {
+        method: "POST",
+        body:   formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error ?? "Upload failed");
+      }
+
+      setValue("imageUrl", data.url, { shouldValidate: true });
+      setImagePreview(data.url);
+      URL.revokeObjectURL(objectUrl);
+    } catch (err) {
+      setUploadError(
+        err instanceof Error ? err.message : "Could not upload image"
+      );
+      setImagePreview(null);
+      setValue("imageUrl", "");
+    } finally {
+      setIsUploading(false);
+    }
   }
 
   function handleFilePick(e: React.ChangeEvent<HTMLInputElement>) {
@@ -62,6 +97,14 @@ export default function CreateVacancyForm({ onSuccess, onCancel }: Props) {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
     if (file) handleImageFile(file);
+  }
+
+  function clearImage(e: React.MouseEvent) {
+    e.stopPropagation();
+    setImagePreview(null);
+    setUploadError("");
+    setValue("imageUrl", "");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   async function onSubmit(data: CreateVacancyData) {
@@ -83,80 +126,94 @@ export default function CreateVacancyForm({ onSuccess, onCancel }: Props) {
 
       {/* ── Image upload ── */}
       <div>
-        <label className="block text-sm font-medium text-foreground mb-2">
+        <label className="block text-sm font-semibold text-gray-900 mb-2">
           Cover Image
         </label>
-
-        {/* Rectangle upload zone */}
         <div
-          onClick={() => fileInputRef.current?.click()}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={handleDrop}
-          className="relative w-full h-44 rounded-xl border-2 border-dashed border-border
-                     bg-muted/40 hover:bg-muted/70 hover:border-foreground/40
-                     transition-colors cursor-pointer overflow-hidden group"
-        >
+  onClick={() => !isUploading && fileInputRef.current?.click()}
+  onDragOver={(e) => e.preventDefault()}
+  onDrop={isUploading ? undefined : handleDrop}
+  style={{
+    height: "200px",
+    width: "50%",
+    border: "2px dashed #999",
+    borderRadius: "12px",
+    backgroundColor: "#f3f4f6",
+    position: "relative",
+    cursor: isUploading ? "not-allowed" : "pointer",
+    overflow: "hidden",
+     marginBottom: "24px",
+   
+  }}
+>
+
+      
           {imagePreview ? (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={imagePreview}
                 alt="Preview"
-                className="w-full h-full object-cover"
+                className={`w-full h-full object-cover transition-opacity ${
+                  isUploading ? "opacity-50" : ""
+                }`}
               />
-              {/* Remove button */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setImagePreview(null);
-                  setValue("imageUrl", "");
-                  if (fileInputRef.current) fileInputRef.current.value = "";
-                }}
-                className="absolute top-2 right-2 bg-black/60 hover:bg-black/80
-                           text-white rounded-full p-1 transition-colors"
-              >
-                <X size={14} />
-              </button>
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                <span className="opacity-0 group-hover:opacity-100 text-white text-xs font-medium bg-black/50 px-3 py-1 rounded-full transition-opacity">
-                  Click to change
-                </span>
-              </div>
+
+              {isUploading && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/40">
+                  <Loader2 className="animate-spin text-white" size={24} />
+                  <span className="text-white text-xs font-medium">
+                    Uploading…
+                  </span>
+                </div>
+              )}
+
+              {!isUploading && (
+                <>
+                  <button
+                    type="button"
+                    onClick={clearImage}
+                    className="absolute top-2 right-2 bg-black/60 hover:bg-black/80
+                               text-white rounded-full p-1 transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                    <span className="opacity-0 group-hover:opacity-100 text-white text-xs font-medium bg-black/50 px-3 py-1 rounded-full transition-opacity">
+                      Click to change
+                    </span>
+                  </div>
+                </>
+              )}
             </>
           ) : (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground">
-              <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
-                <ImageIcon size={20} />
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-gray-500">
+              <div className="w-10 h-10 rounded-xl bg-gray-200 flex items-center justify-center">
+                <ImageIcon size={20} className="text-gray-600" />
               </div>
-              <p className="text-sm font-medium text-foreground">Click to upload image</p>
-              <p className="text-xs">or drag and drop · PNG, JPG, WEBP</p>
+              <p className="text-sm font-medium text-gray-700">Click to upload image</p>
+              <p className="text-xs text-gray-500">or drag and drop · PNG, JPG, WEBP</p>
             </div>
           )}
         </div>
 
-        {/* Hidden file input */}
         <input
           ref={fileInputRef}
           type="file"
           accept="image/*"
           className="hidden"
           onChange={handleFilePick}
+          disabled={isUploading}
         />
 
-        {/* Optional: paste a URL instead */}
-        <div className="mt-2">
-          <input
-            {...register("imageUrl")}
-            placeholder="Or paste an image URL…"
-            className="w-full border border-border rounded-lg px-3 py-2 text-sm
-                       bg-background text-foreground placeholder:text-muted-foreground
-                       focus:outline-none focus:ring-2 focus:ring-foreground/20 transition"
-          />
-          {errors.imageUrl && (
-            <p className="text-xs text-red-500 mt-1">{errors.imageUrl.message}</p>
-          )}
-        </div>
+        {uploadError && (
+          <p className="text-xs text-red-600 mt-1">{uploadError}</p>
+        )}
+
+        <input type="hidden" {...register("imageUrl")} />
+        {errors.imageUrl && (
+          <p className="text-xs text-red-600 mt-1">{errors.imageUrl.message}</p>
+        )}
       </div>
 
       {/* ── Restaurant + Location ── */}
@@ -226,7 +283,7 @@ export default function CreateVacancyForm({ onSuccess, onCancel }: Props) {
 
       {/* ── Global error ── */}
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">
+        <p className="text-sm text-red-700 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">
           {error}
         </p>
       )}
@@ -237,19 +294,18 @@ export default function CreateVacancyForm({ onSuccess, onCancel }: Props) {
           <button
             type="button"
             onClick={onCancel}
-            className="border border-border rounded-lg px-4 py-2 text-sm font-medium
-                       hover:bg-muted transition-colors"
+            className="border border-gray-300 text-gray-700 rounded-lg px-4 py-2 text-sm font-medium
+                       hover:bg-gray-100 transition-colors"
           >
             Cancel
           </button>
         )}
         <button
           type="submit"
-          disabled={isSubmitting}
-          className="bg-foreground text-background rounded-lg px-5 py-2 text-sm font-medium
-                     disabled:opacity-50 hover:opacity-90 transition-opacity"
+          disabled={isSubmitting || isUploading}
+          className="border border-gray-300 text-gray-700 rounded-lg px-4 py-2 text-sm font-medium   hover:bg-gray-100 transition-colors"
         >
-          {isSubmitting ? "Creating…" : "Create vacancy"}
+          {isSubmitting ? "Creating…" : isUploading ? "Waiting for image…" : "Create vacancy"}
         </button>
       </div>
     </form>
@@ -259,9 +315,9 @@ export default function CreateVacancyForm({ onSuccess, onCancel }: Props) {
 /* ── Helpers ── */
 
 const inputCls =
-  "w-full border border-border rounded-lg px-3 py-2 text-sm bg-background " +
-  "text-foreground placeholder:text-muted-foreground " +
-  "focus:outline-none focus:ring-2 focus:ring-foreground/20 transition";
+  "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white " +
+  "text-gray-900 placeholder:text-gray-400 " +
+  "focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500 transition";
 
 function Field({
   label,
@@ -276,12 +332,12 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-foreground mb-1.5">
+      <label className="block text-sm font-semibold text-gray-900 mb-1.5">
         {label}
-        {required && <span className="text-red-500 ml-0.5">*</span>}
+        {required && <span className="text-red-600 ml-0.5">*</span>}
       </label>
       {children}
-      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+      {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
     </div>
   );
 }

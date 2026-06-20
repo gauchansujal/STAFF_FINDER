@@ -1,7 +1,7 @@
 "use client";
 
 import { Vacancy } from "@/app/lib/api/vacancy";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Eye, Pencil, Trash2, ImageOff } from "lucide-react";
 
 interface Props {
   vacancies: Vacancy[];
@@ -10,14 +10,20 @@ interface Props {
   onDelete:  (id: string) => void;
 }
 
+const headers = ["Image", "Job Title", "Restaurant", "Location", "Applications", "Status", "Actions"];
+
 export default function VacancyTable({ vacancies, onView, onEdit, onDelete }: Props) {
   return (
-    <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", overflow: "hidden" }}>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+      <table className="w-full border-collapse text-sm">
         <thead>
-          <tr style={{ background: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
-            {["Job Title", "Restaurant", "Location", "Applications", "Status", "Actions"].map((h) => (
-              <th key={h} style={{ textAlign: "left", padding: "12px 24px", color: "#374151", fontWeight: 700, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <tr className="bg-gray-50 border-b border-gray-200">
+            {headers.map((h) => (
+              <th
+                key={h}
+                className="text-left px-6 py-3 font-bold text-xs uppercase tracking-wider"
+                style={{ color: "#374151" }}
+              >
                 {h}
               </th>
             ))}
@@ -26,7 +32,7 @@ export default function VacancyTable({ vacancies, onView, onEdit, onDelete }: Pr
         <tbody>
           {vacancies.length === 0 ? (
             <tr>
-              <td colSpan={6} style={{ textAlign: "center", padding: "64px 24px", color: "#9ca3af" }}>
+              <td colSpan={7} className="text-center px-6 py-16" style={{ color: "#9ca3af" }}>
                 No vacancies found.
               </td>
             </tr>
@@ -34,57 +40,90 @@ export default function VacancyTable({ vacancies, onView, onEdit, onDelete }: Pr
             vacancies.map((v) => {
               const id = (v._id ?? v.id) as string;
               return (
-                <tr key={id} style={{ borderBottom: "1px solid #f3f4f6" }}
-                  onMouseEnter={e => (e.currentTarget.style.background = "#f9fafb")}
-                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                <tr
+                  key={id}
+                  className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                 >
+                  {/* Image */}
+                  <td className="px-6 py-4">
+                    {v.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={v.imageUrl}
+                        alt={v.RestaurantName}
+                        className="w-12 h-12 rounded-lg object-cover border border-gray-200 flex-shrink-0"
+                      />
+                    ) : (
+                      <div
+                        className="w-12 h-12 rounded-lg border border-gray-200 flex items-center justify-center flex-shrink-0"
+                        style={{ backgroundColor: "#f3f4f6", color: "#9ca3af" }}
+                      >
+                        <ImageOff size={18} />
+                      </div>
+                    )}
+                  </td>
+
                   {/* Job Title */}
-                  <td style={{ padding: "16px 24px" }}>
-                    <div style={{ fontWeight: 700, color: "#111827" }}>{v.position}</div>
-                    <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>{v.jobType}</div>
+                  <td className="px-6 py-4">
+                    <div className="font-bold" style={{ color: "#111827" }}>{v.position}</div>
+                    <div className="text-xs mt-0.5" style={{ color: "#6b7280" }}>{v.jobType}</div>
                   </td>
 
                   {/* Restaurant */}
-                  <td style={{ padding: "16px 24px", color: "#1f2937", fontWeight: 500 }}>{v.RestaurantName}</td>
+                  <td className="px-6 py-4 font-medium" style={{ color: "#1f2937" }}>{v.RestaurantName}</td>
 
                   {/* Location */}
-                  <td style={{ padding: "16px 24px", color: "#1f2937" }}>{v.location}</td>
+                  <td className="px-6 py-4" style={{ color: "#1f2937" }}>{v.location}</td>
 
                   {/* Applications */}
-                  <td style={{ padding: "16px 24px" }}>
-                    <span style={{
-                      display: "inline-flex", alignItems: "center", justifyContent: "center",
-                      minWidth: 32, height: 32, padding: "0 10px", borderRadius: 999,
-                      background: "#dbeafe", color: "#1d4ed8", fontSize: 13, fontWeight: 700
-                    }}>
+                  <td className="px-6 py-4">
+                    <span
+                      className="inline-flex items-center justify-center min-w-[32px] h-8 px-2.5 rounded-full text-[13px] font-bold"
+                      style={{ backgroundColor: "#dbeafe", color: "#1d4ed8" }}
+                    >
                       {v.applications ?? 0}
                     </span>
                   </td>
 
                   {/* Status */}
-                  <td style={{ padding: "16px 24px" }}>
-                    <span style={{
-                      display: "inline-flex", alignItems: "center", gap: 6,
-                      padding: "4px 12px", borderRadius: 999,
-                      background: "#dcfce7", color: "#15803d",
-                      border: "1px solid #86efac",
-                      fontSize: 12, fontWeight: 700
-                    }}>
-                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#16a34a", flexShrink: 0 }} />
+                  <td className="px-6 py-4">
+                    <span
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold"
+                      style={{ backgroundColor: "#dcfce7", color: "#15803d", borderColor: "#86efac" }}
+                    >
+                      <span
+                        className="w-[7px] h-[7px] rounded-full flex-shrink-0"
+                        style={{ backgroundColor: "#16a34a" }}
+                      />
                       Active
                     </span>
                   </td>
 
                   {/* Actions */}
-                  <td style={{ padding: "16px 24px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      <button onClick={() => onView?.(v)} title="View" style={iconBtn("#4b5563", "#f3f4f6")}>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => onView?.(v)}
+                        title="View"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg border-none cursor-pointer bg-transparent hover:bg-gray-100 transition-colors"
+                        style={{ color: "#4b5563" }}
+                      >
                         <Eye size={16} />
                       </button>
-                      <button onClick={() => onEdit(v)} title="Edit" style={iconBtn("#2563eb", "#eff6ff")}>
+                      <button
+                        onClick={() => onEdit(v)}
+                        title="Edit"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg border-none cursor-pointer bg-transparent hover:bg-blue-50 transition-colors"
+                        style={{ color: "#2563eb" }}
+                      >
                         <Pencil size={16} />
                       </button>
-                      <button onClick={() => onDelete(id)} title="Delete" style={iconBtn("#dc2626", "#fef2f2")}>
+                      <button
+                        onClick={() => onDelete(id)}
+                        title="Delete"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg border-none cursor-pointer bg-transparent hover:bg-red-50 transition-colors"
+                        style={{ color: "#dc2626" }}
+                      >
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -97,13 +136,4 @@ export default function VacancyTable({ vacancies, onView, onEdit, onDelete }: Pr
       </table>
     </div>
   );
-}
-
-function iconBtn(color: string, hoverBg: string): React.CSSProperties {
-  return {
-    width: 32, height: 32,
-    display: "flex", alignItems: "center", justifyContent: "center",
-    borderRadius: 8, border: "none", cursor: "pointer",
-    background: "transparent", color,
-  };
 }
