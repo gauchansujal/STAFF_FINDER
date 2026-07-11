@@ -1,6 +1,6 @@
 // controller/admin/admin.controller.ts
 import { UserRepository } from "../../repository/user.repository";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 // ✅ Helper — converts Mongoose doc to plain object safely
 function toPlain(doc: any) {

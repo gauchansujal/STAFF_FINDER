@@ -1,7 +1,7 @@
 import { Elysia, t } from "elysia";
 import { jwt } from "@elysiajs/jwt";
 import { UserRepository } from "../repository/user.repository";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 export const authRouter = new Elysia({ prefix: "/auth" })
   .use(jwt({ name: "jwt", secret: process.env.JWT_SECRET! }))

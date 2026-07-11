@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { staticPlugin } from "@elysiajs/static";
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
@@ -8,6 +7,7 @@ import { authRouter } from "./router/auth.route";
 import { adminRouter } from "./router/admin/admin.route";
 import { vacancyRoutes } from "./router/vacancy.route";
 import {uploadRoute} from "./router/upload.route";
+import { applicationRoutes } from "./router/application.route";
 
 
 await connectDB();
@@ -22,7 +22,8 @@ const app = new Elysia()
   .use(authRouter)
   .use(adminRouter)
   .use(vacancyRoutes)
-  .use(uploadRoute)   
+  .use(uploadRoute)
+  .use(applicationRoutes)
   .get("/", () => ({ message: "hello world", status: "ok" }))
   .listen(process.env.PORT || 5000);
 

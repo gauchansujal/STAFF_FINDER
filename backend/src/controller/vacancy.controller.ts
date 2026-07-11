@@ -1,4 +1,4 @@
-import { VacancyService } from "../services/vacancy.services";
+import { VacancyService } from "../services/vacancy.service";
 import type { Context } from "elysia";
 
 type AuthContext = Context & { user: any; userRole: string };

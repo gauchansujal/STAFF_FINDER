@@ -1,7 +1,7 @@
 import { UserRepository } from "../repository/user.repository";
 import type { UserType } from "../types/user.types";
 import type { RegisterDTOType } from "../dto/user.dto";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 export const UserService = {
   async createUser(data: RegisterDTOType) {
