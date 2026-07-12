@@ -5,20 +5,32 @@ import type { IApplication } from "../models/application.model";
 const applicationRepo = new ApplicationRepository();
 const vacancyRepo     = new VacancyRepository();
 
+export interface ApplyPayload {
+  fullName:    string;
+  email:       string;
+  phoneNumber: string;
+  coverLetter: string;
+  cvUrl:       string;
+}
+
 export const ApplicationService = {
-  async apply(userId: string, vacancyId: string): Promise<IApplication> {
-    // check vacancy exists
+  async apply(userId: string, vacancyId: string, payload: ApplyPayload): Promise<IApplication> {
     const vacancy = await vacancyRepo.getVacancyById(vacancyId);
     if (!vacancy) throw new Error("Vacancy not found");
 
-    // check already applied
     const alreadyApplied = await applicationRepo.existsByUserAndVacancy(userId, vacancyId);
     if (alreadyApplied) throw new Error("You have already applied for this vacancy");
 
-    // snapshot vacancy data into application
     const data: Partial<IApplication> = {
       userId:         userId as any,
       vacancyId:      vacancyId as any,
+      // applicant details
+      fullName:       payload.fullName,
+      email:          payload.email,
+      phoneNumber:    payload.phoneNumber,
+      coverLetter:    payload.coverLetter,
+      cvUrl:          payload.cvUrl,
+      // vacancy snapshot
       imageUrl:       vacancy.imageUrl,
       position:       vacancy.position,
       RestaurantName: vacancy.RestaurantName,
@@ -32,7 +44,6 @@ export const ApplicationService = {
 
     const application = await applicationRepo.create(data);
 
-    // increment applications count on vacancy
     await vacancyRepo.updateVacancy(vacancyId, {
       applications: (vacancy.applications ?? 0) + 1,
     });

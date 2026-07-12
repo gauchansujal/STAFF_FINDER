@@ -1,10 +1,20 @@
 import { ApplicationService } from "../services/application.service";
 
 export const ApplicationController = {
-  // POST /applications/:vacancyId
-  apply: async ({ params, user, set }: any) => {
+  // POST /applications/:jobPostId
+  apply: async ({ params, body, user, set }: any) => {
     try {
-      const application = await ApplicationService.apply(user.id, params.vacancyId);
+      const application = await ApplicationService.apply(
+        user.id,
+        params.jobPostId,
+        {
+          fullName:    body.fullName,
+          email:       body.email,
+          phoneNumber: body.phoneNumber,
+          coverLetter: body.coverLetter,
+          cvUrl:       body.cvUrl,
+        }
+      );
       set.status = 201;
       return { success: true, data: application };
     } catch (error: any) {
@@ -46,10 +56,10 @@ export const ApplicationController = {
     }
   },
 
-  // GET /applications/vacancy/:vacancyId — admin only
-  getApplicationsByVacancy: async ({ params, set }: any) => {
+  // GET /applications/jobpost/:jobPostId — admin only
+  getApplicationsByJobPost: async ({ params, set }: any) => {
     try {
-      const applications = await ApplicationService.getApplicationsByVacancy(params.vacancyId);
+      const applications = await ApplicationService.getApplicationsByJobPost(params.jobPostId);
       return { success: true, data: applications };
     } catch (error: any) {
       set.status = 500;
@@ -68,7 +78,7 @@ export const ApplicationController = {
     }
   },
 
-  // DELETE /applications/:id
+  // DELETE /applications/:id — admin only
   deleteApplication: async ({ params, set }: any) => {
     try {
       await ApplicationService.deleteApplication(params.id);

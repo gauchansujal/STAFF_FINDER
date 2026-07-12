@@ -26,8 +26,16 @@ export const applicationRoutes = new Elysia({ prefix: "/applications" })
     return { user, userRole: user.role as string };
   })
 
-  // ✅ user routes — apply + view only
-  .post("/:vacancyId", ApplicationController.apply)
+  // ✅ user routes
+  .post("/:jobPostId", ApplicationController.apply, {
+    body: t.Object({
+      fullName:    t.String(),
+      email:       t.String(),
+      phoneNumber: t.String(),
+      coverLetter: t.String(),
+      cvUrl:       t.String(),
+    }),
+  })
   .get("/me", ApplicationController.getMyApplications)
   .get("/:id", ApplicationController.getApplicationById)
 
@@ -42,7 +50,7 @@ export const applicationRoutes = new Elysia({ prefix: "/applications" })
         return {};
       })
       .get("/", ApplicationController.getAllApplications)
-      .get("/vacancy/:vacancyId", ApplicationController.getApplicationsByVacancy)
+      .get("/jobpost/:jobPostId", ApplicationController.getApplicationsByJobPost)
       .patch("/:id/status", ApplicationController.updateStatus, {
         body: t.Object({
           status: t.Union([
@@ -52,5 +60,5 @@ export const applicationRoutes = new Elysia({ prefix: "/applications" })
           ]),
         }),
       })
-      .delete("/:id", ApplicationController.deleteApplication) // ✅ admin only
+      .delete("/:id", ApplicationController.deleteApplication)
   );
