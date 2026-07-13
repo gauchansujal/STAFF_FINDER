@@ -9,6 +9,7 @@ export const VacancySchema = z.object({
     jobType: z.enum(["full-time", "part-time"]),
     description: z.string().min(20),
     applications: z.number().min(0).default(0),
+    requirements: z.array(z.string()).default([]), // ✅
 
 
 });
