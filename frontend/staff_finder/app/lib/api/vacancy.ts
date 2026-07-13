@@ -9,18 +9,19 @@ async function getToken(): Promise<string> {
 }
 
 export interface Vacancy {
-  _id:           string;
-  id:            string;
+  _id:            string;
+  id:             string;
   RestaurantName: string;
-  location:      string;
-  imageUrl?:     string;
-  salary:        number;
-  position:      string;
-  jobType:       "full-time" | "part-time";
-  description:   string;
-  applications:  number;
-  createdAt:     string;
-  updatedAt:     string;
+  location:       string;
+  imageUrl?:      string;
+  salary:         number;
+  position:       string;
+  jobType:        "full-time" | "part-time";
+  description:    string;
+  requirements:   string[]; // ✅
+  applications:   number;
+  createdAt:      string;
+  updatedAt:      string;
 }
 
 export interface CreateVacancyPayload {
@@ -31,6 +32,7 @@ export interface CreateVacancyPayload {
   position:       string;
   jobType:        "full-time" | "part-time";
   description:    string;
+  requirements?:  string[]; // ✅
   applications?:  number;
 }
 
@@ -42,6 +44,7 @@ export interface UpdateVacancyPayload {
   position?:       string;
   jobType?:        "full-time" | "part-time";
   description?:    string;
+  requirements?:   string[]; // ✅
 }
 
 export interface PaginatedVacancyResponse {
