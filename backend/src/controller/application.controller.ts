@@ -1,12 +1,12 @@
 import { ApplicationService } from "../services/application.service";
 
 export const ApplicationController = {
-  // POST /applications/:jobPostId
+  // POST /applications/:vacancyId
   apply: async ({ params, body, user, set }: any) => {
     try {
       const application = await ApplicationService.apply(
         user.id,
-        params.jobPostId,
+        params.vacancyId, // ✅
         {
           fullName:    body.fullName,
           email:       body.email,
@@ -56,10 +56,10 @@ export const ApplicationController = {
     }
   },
 
-  // GET /applications/jobpost/:jobPostId — admin only
-  getApplicationsByJobPost: async ({ params, set }: any) => {
+  // GET /applications/vacancy/:vacancyId — admin only
+  getApplicationsByVacancy: async ({ params, set }: any) => { // ✅
     try {
-      const applications = await ApplicationService.getApplicationsByJobPost(params.jobPostId);
+      const applications = await ApplicationService.getApplicationsByVacancy(params.vacancyId);
       return { success: true, data: applications };
     } catch (error: any) {
       set.status = 500;

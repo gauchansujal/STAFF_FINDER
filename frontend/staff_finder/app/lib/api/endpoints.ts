@@ -27,4 +27,13 @@ export const ENDPOINTS = {
     UPDATE: (id: string) => `${BASE_URL}/vacancy/${id}`,    // ✅ function
     DELETE: (id: string) => `${BASE_URL}/vacancy/${id}`,    // ✅ function
   },
+    APPLICATIONS: {                                                          // ✅
+    GET_ALL:          `${BASE_URL}/applications`,
+    GET_MY:           `${BASE_URL}/applications/me`,
+    GET_BY_ID:        (id: string) => `${BASE_URL}/applications/${id}`,
+    APPLY:            (vacancyId: string) => `${BASE_URL}/applications/${vacancyId}`,
+    GET_BY_VACANCY:   (vacancyId: string) => `${BASE_URL}/applications/vacancy/${vacancyId}`,
+    UPDATE_STATUS:    (id: string) => `${BASE_URL}/applications/${id}/status`,
+    DELETE:           (id: string) => `${BASE_URL}/applications/${id}`,
+  },
 } as const;

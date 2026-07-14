@@ -1,5 +1,5 @@
 import { VacancyModel, type IVacancy } from "../models/vacancy.model";
-import { QueryFilter } from "mongoose";
+import type { QueryFilter } from "mongoose";
 
 export interface IVacancyRepository {
   getVacancyById(id: string): Promise<IVacancy | null>;

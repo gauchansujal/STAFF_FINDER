@@ -2,7 +2,7 @@ import mongoose, { Schema, model, Document } from "mongoose";
 
 export interface IApplication extends Document {
   userId:      mongoose.Types.ObjectId;
-  jobPostId:   mongoose.Types.ObjectId;
+  vacancyId:   mongoose.Types.ObjectId; // ✅ changed from jobPostId
   fullName:    string;
   email:       string;
   phoneNumber: string;
@@ -15,7 +15,7 @@ export interface IApplication extends Document {
 
 const applicationSchema = new Schema<IApplication>({
   userId:      { type: Schema.Types.ObjectId, ref: "User",    required: true },
-  jobPostId:   { type: Schema.Types.ObjectId, ref: "JobPost", required: true },
+  vacancyId:   { type: Schema.Types.ObjectId, ref: "Vacancy", required: true }, // ✅
   fullName:    { type: String, required: true },
   email:       { type: String, required: true },
   phoneNumber: { type: String, required: true },

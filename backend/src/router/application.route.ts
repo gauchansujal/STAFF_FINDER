@@ -27,7 +27,7 @@ export const applicationRoutes = new Elysia({ prefix: "/applications" })
   })
 
   // ✅ user routes
-  .post("/:jobPostId", ApplicationController.apply, {
+  .post("/:vacancyId", ApplicationController.apply, { // ✅ changed from jobPostId
     body: t.Object({
       fullName:    t.String(),
       email:       t.String(),
@@ -50,7 +50,7 @@ export const applicationRoutes = new Elysia({ prefix: "/applications" })
         return {};
       })
       .get("/", ApplicationController.getAllApplications)
-      .get("/jobpost/:jobPostId", ApplicationController.getApplicationsByJobPost)
+      .get("/vacancy/:vacancyId", ApplicationController.getApplicationsByVacancy) // ✅
       .patch("/:id/status", ApplicationController.updateStatus, {
         body: t.Object({
           status: t.Union([

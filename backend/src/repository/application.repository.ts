@@ -10,20 +10,20 @@ export class ApplicationRepository {
   async findById(id: string): Promise<IApplication | null> {
     return await ApplicationModel.findById(id)
       .populate("userId",    "username email firstname lastname imageUrl")
-      .populate("jobPostId");
+      .populate("vacancyId"); // ✅
   }
 
   async findByUserId(userId: string): Promise<IApplication[]> {
     return await ApplicationModel.find({
       userId: new mongoose.Types.ObjectId(userId),
     })
-      .populate("jobPostId")
+      .populate("vacancyId") // ✅
       .sort({ createdAt: -1 });
   }
 
-  async findByJobPostId(jobPostId: string): Promise<IApplication[]> {
+  async findByVacancyId(vacancyId: string): Promise<IApplication[]> { // ✅
     return await ApplicationModel.find({
-      jobPostId: new mongoose.Types.ObjectId(jobPostId),
+      vacancyId: new mongoose.Types.ObjectId(vacancyId), // ✅
     })
       .populate("userId", "username email firstname lastname imageUrl")
       .sort({ createdAt: -1 });
@@ -32,7 +32,7 @@ export class ApplicationRepository {
   async findAll(): Promise<IApplication[]> {
     return await ApplicationModel.find()
       .populate("userId",    "username email firstname lastname imageUrl")
-      .populate("jobPostId")
+      .populate("vacancyId") // ✅
       .sort({ createdAt: -1 });
   }
 
@@ -52,10 +52,10 @@ export class ApplicationRepository {
     return !!result;
   }
 
-  async existsByUserAndJobPost(userId: string, jobPostId: string): Promise<boolean> {
+  async existsByUserAndVacancy(userId: string, vacancyId: string): Promise<boolean> { // ✅
     const result = await ApplicationModel.exists({
       userId:    new mongoose.Types.ObjectId(userId),
-      jobPostId: new mongoose.Types.ObjectId(jobPostId),
+      vacancyId: new mongoose.Types.ObjectId(vacancyId), // ✅
     });
     return !!result;
   }
