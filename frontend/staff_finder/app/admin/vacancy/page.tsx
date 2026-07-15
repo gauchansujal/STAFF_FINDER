@@ -33,7 +33,7 @@ export default function VacancyPage() {
   return (
     <div className="min-h-screen bg-gray-50/50 p-8">
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="flex items-start justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Manage Vacancies</h1>
@@ -42,15 +42,14 @@ export default function VacancyPage() {
         <button
           onClick={() => router.push("/admin/vacancy/create")}
           className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 active:bg-orange-700
-                     text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm
-                     transition-colors"
+                     text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition-colors"
         >
           <Plus size={16} strokeWidth={2.5} />
           Add Vacancy
         </button>
       </div>
 
-      {/* ── Table ── */}
+      {/* Table */}
       {isPending ? (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm py-20 text-center">
           <p className="text-sm text-gray-400">Loading vacancies…</p>
@@ -58,12 +57,13 @@ export default function VacancyPage() {
       ) : (
         <VacancyTable
           vacancies={vacancies}
+          onView={(v) => router.push(`/admin/vacancy/${v._id ?? v.id}`)} // ✅
           onEdit={(v) => setEditing(v)}
           onDelete={(id) => setDeleteId(id)}
         />
       )}
 
-      {/* ── Edit modal ── */}
+      {/* Edit modal */}
       {editing && (
         <Modal title="Edit vacancy" onClose={() => setEditing(null)}>
           <UpdateVacancyForm
@@ -74,7 +74,7 @@ export default function VacancyPage() {
         </Modal>
       )}
 
-      {/* ── Delete confirm modal ── */}
+      {/* Delete modal */}
       {deleteId && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 w-[360px] shadow-xl">
@@ -84,19 +84,17 @@ export default function VacancyPage() {
               </svg>
             </div>
             <h2 className="text-base font-semibold text-gray-900 mb-1">Delete vacancy?</h2>
-            <p className="text-sm text-gray-500">This action cannot be undone. The vacancy will be permanently removed.</p>
+            <p className="text-sm text-gray-500">This action cannot be undone.</p>
             <div className="flex justify-end gap-2 mt-6">
               <button
                 onClick={() => setDeleteId(null)}
-                className="border border-gray-200 rounded-lg px-4 py-2 text-sm font-medium
-                           text-gray-700 hover:bg-gray-50 transition-colors"
+                className="border border-gray-200 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDelete(deleteId)}
-                className="bg-red-500 hover:bg-red-600 text-white rounded-lg px-4 py-2
-                           text-sm font-medium transition-colors"
+                className="bg-red-500 hover:bg-red-600 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"
               >
                 Delete
               </button>
@@ -108,17 +106,15 @@ export default function VacancyPage() {
   );
 }
 
-/* ── Reusable modal shell ── */
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl p-6 w-[580px] shadow-xl max-h-[30vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl p-6 w-[580px] shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-base font-semibold text-gray-900">{title}</h2>
           <button
             onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400
-                       hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           >
             ✕
           </button>

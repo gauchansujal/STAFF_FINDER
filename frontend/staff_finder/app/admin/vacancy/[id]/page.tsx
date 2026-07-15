@@ -18,7 +18,12 @@ export default function VacancyDetailPage() {
   useEffect(() => {
     async function load() {
       const res = await getVacancyByIdAction(id);
-      if (res.success) setVacancy(res.data!);
+      console.log("VACANCY RES:", JSON.stringify(res)); // 👈 debug
+      if (res.success && res.data) {
+        // handle nested data
+        const v = (res.data as any)?.data ?? (res.data as any)?.vacancy ?? res.data;
+        setVacancy(v);
+      }
       setLoading(false);
     }
     load();
@@ -35,6 +40,11 @@ export default function VacancyDetailPage() {
       <p className="text-sm text-gray-400">Vacancy not found</p>
     </div>
   );
+
+  // ✅ safe values
+  const salary       = typeof vacancy.salary === "number" ? vacancy.salary : 0;
+  const applications = vacancy.applications ?? 0;
+  const requirements = vacancy.requirements ?? [];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -60,9 +70,9 @@ export default function VacancyDetailPage() {
           <h1 className="text-3xl font-bold text-white">{vacancy.position}</h1>
           <p className="text-white/80 mt-1">{vacancy.RestaurantName}</p>
           <div className="flex items-center gap-3 mt-3 flex-wrap">
-            <Tag icon={<MapPin size={13} />}      label={vacancy.location} />
-            <Tag icon={<DollarSign size={13} />}  label={`Rs. ${vacancy.salary.toLocaleString()}`} />
-            <Tag icon={<Briefcase size={13} />}   label={vacancy.jobType} />
+            <Tag icon={<MapPin size={13} />}     label={vacancy.location} />
+            <Tag icon={<DollarSign size={13} />} label={`Rs. ${salary.toLocaleString()}`} />
+            <Tag icon={<Briefcase size={13} />}  label={vacancy.jobType} />
           </div>
         </div>
       </div>
@@ -79,10 +89,10 @@ export default function VacancyDetailPage() {
             </div>
           </Section>
 
-          {vacancy.requirements?.length > 0 && (
+          {requirements.length > 0 && (
             <Section title="Requirements">
               <ul className="space-y-2.5">
-                {vacancy.requirements.map((req, i) => (
+                {requirements.map((req, i) => (
                   <li key={i} className="flex items-start gap-2.5 text-sm text-gray-600">
                     <CheckCircle2 size={16} className="text-orange-500 shrink-0 mt-0.5" />
                     {req}
@@ -97,7 +107,7 @@ export default function VacancyDetailPage() {
               {vacancy.RestaurantName} is a restaurant located in {vacancy.location}.
             </p>
             <div className="grid grid-cols-2 gap-4 mt-4">
-              <InfoBox icon={<Users size={16} />}  label="Applicants" value={`${vacancy.applications ?? 0} candidates`} />
+              <InfoBox icon={<Users size={16} />}  label="Applicants" value={`${applications} candidates`} />
               <InfoBox icon={<MapPin size={16} />} label="Location"   value={vacancy.location} />
             </div>
           </Section>
@@ -118,14 +128,14 @@ export default function VacancyDetailPage() {
               <p className="text-xs text-gray-400 font-medium">Applicants</p>
               <div className="flex items-center gap-1.5 mt-1">
                 <Users size={14} className="text-orange-500" />
-                <span className="text-sm text-gray-700">{vacancy.applications ?? 0} candidates</span>
+                <span className="text-sm text-gray-700">{applications} candidates</span>
               </div>
             </div>
             <hr className="border-gray-100" />
             <div>
               <p className="text-xs text-gray-400 font-medium">Salary</p>
               <p className="text-lg font-bold text-gray-900 mt-1">
-                Rs. {vacancy.salary.toLocaleString()}
+                Rs. {salary.toLocaleString()}
               </p>
             </div>
             <hr className="border-gray-100" />
