@@ -1,10 +1,6 @@
 {
-  "version": 2,
-  "functions": {
-    "src/index.ts": {
-      "runtime": "bun"
-    }
-  },
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "bunVersion": "1.x",
   "rewrites": [
     { "source": "/(.*)", "destination": "/src/index.ts" }
   ]
