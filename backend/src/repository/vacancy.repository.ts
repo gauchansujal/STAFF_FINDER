@@ -1,5 +1,5 @@
 import { VacancyModel, type IVacancy } from "../models/vacancy.model";
-import type { QueryFilter } from "mongoose";
+import type {  FilterQuery } from "mongoose";
 
 export interface IVacancyRepository {
   getVacancyById(id: string): Promise<IVacancy | null>;
@@ -20,7 +20,7 @@ export class VacancyRepository implements IVacancyRepository {
     pageSize: number,
     search?: string
   ): Promise<{ Vacancy: IVacancy[]; total: number }> {
-    const filter: QueryFilter<IVacancy> = {};
+    const filter: FilterQuery<IVacancy> = {};
 
     if (search) {
       filter.$or = [
