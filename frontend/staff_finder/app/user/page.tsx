@@ -42,7 +42,7 @@ export default function BrowseJobsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by job title or restaurant..."
-            className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
+            className="w-full pl-9 pr-4 py-2.5 text-sm border border-black-200 rounded-xl outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition text-gray-900"
           />
         </div>
         <button className="flex items-center gap-2 border border-gray-200 px-4 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
