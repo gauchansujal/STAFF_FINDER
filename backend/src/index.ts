@@ -24,7 +24,12 @@ const app = new Elysia()
   .use(vacancyRoutes)
   .use(uploadRoute)
   .use(applicationRoutes)
-  .get("/", () => ({ message: "hello world", status: "ok" }))
-  .listen(process.env.PORT || 5000);
+.get("/", () => ({ message: "hello world", status: "ok" }));
 
-console.log(`🚀 Server running on http://localhost:${process.env.PORT || 5000}`);
+// Local dev only — Vercel ignores this since it imports the handler directly
+if (process.env.NODE_ENV !== "production") {
+  app.listen(process.env.PORT || 5000);
+  console.log(`🚀 Server running on http://localhost:${process.env.PORT || 5000}`);
+}
+
+export default app.fetch; // ✅ what Vercel actually invokes
