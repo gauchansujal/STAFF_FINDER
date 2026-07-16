@@ -56,7 +56,7 @@ export default function LoginForm() {
       if (userRole === "admin") {
         router.push("/admin");
       } else {
-        router.push("/");
+        router.push("/user");
       }
     } catch (err: unknown) {
       setServerError(
