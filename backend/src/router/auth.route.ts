@@ -68,7 +68,7 @@ export const authRouter = new Elysia({ prefix: "/auth" })
     }
 
     const token = await jwt.sign({
-      id: user._id.toString(),
+       id: String(user._id),
       role: user.role,
       iat: Math.floor(Date.now() / 1000),                       // ✅ unique every login
       exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7,   // ✅ expires in 7 days
