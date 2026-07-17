@@ -20,14 +20,17 @@ export const uploadRoute = new Elysia({ prefix: "/upload" })
     const base64 = `data:${file.type};base64,${buffer.toString("base64")}`;
 
     const result = await cloudinary.uploader.upload(base64, {
-      folder: "staff-finder-uploads",
+      folder:        "staff-finder-uploads",
+      resource_type: "auto", // ✅ auto detects image, pdf, doc etc
     });
 
     return {
-      success: true,
-      url: result.secure_url,
+      success:  true,
+      url:      result.secure_url,
       publicId: result.public_id,
     };
   }, {
-    body: t.Object({ file: t.File({ type: "image/*" }) }),
+    body: t.Object({
+      file: t.File(), // ✅ removed type restriction — accepts all files
+    }),
   });
