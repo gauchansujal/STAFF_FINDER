@@ -6,58 +6,63 @@ import Footer from "./_components/footer";
 import Header from "./_components/header";
 import { Briefcase, UserPlus, TrendingUp, X } from "lucide-react";
 import { getAllVacanciesAction } from "@/app/lib/actions/vacancy-action";
+import { getMyApplicationsAction } from "@/app/lib/actions/application-action";
 import { Vacancy } from "@/app/lib/api/vacancy";
 
 export default function Home() {
   const [showPopup, setShowPopup] = useState(false);
   const router = useRouter();
 
-  // ── Real stats, derived from actual vacancy data ──
-  const [activeJobs, setActiveJobs]     = useState<number | null>(null);
-  const [restaurants, setRestaurants]   = useState<number | null>(null);
+  const [activeJobs,  setActiveJobs]  = useState<number | null>(null);
+  const [restaurants, setRestaurants] = useState<number | null>(null);
+  const [myApps,      setMyApps]      = useState<number | null>(null);
+  const [successRate, setSuccessRate] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
 
     async function loadStats() {
-      const res = await getAllVacanciesAction();
-      if (!mounted || !res.success || !res.data) return;
+      const [vacanciesRes, appsRes] = await Promise.all([
+        getAllVacanciesAction(),
+        getMyApplicationsAction(),
+      ]);
 
-      const vacancies: Vacancy[] = res.data;
+      if (!mounted) return;
 
-      // Active Jobs = total number of vacancy postings
-      setActiveJobs(vacancies.length);
+      if (vacanciesRes.success && vacanciesRes.data) {
+        const vacancies: Vacancy[] = vacanciesRes.data;
+        setActiveJobs(vacancies.length);
+        const uniqueRestaurants = new Set(
+          vacancies.map((v) => v.RestaurantName?.trim().toLowerCase()).filter(Boolean)
+        );
+        setRestaurants(uniqueRestaurants.size);
+      }
 
-      // Restaurants = count of unique restaurant names
-      const uniqueRestaurants = new Set(
-        vacancies
-          .map((v) => v.RestaurantName?.trim().toLowerCase())
-          .filter(Boolean)
-      );
-      setRestaurants(uniqueRestaurants.size);
+      if (appsRes.success && appsRes.data) {
+        const total    = appsRes.data.length;
+        const accepted = appsRes.data.filter((a: any) => a.status === "accepted").length;
+        setMyApps(total);
+        const rate = total > 0 ? Math.round((accepted / total) * 100) : 0;
+        setSuccessRate(`${rate}%`);
+      }
     }
 
     loadStats();
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, []);
 
-  const handleProtectedClick = () => {
-    setShowPopup(true);
-  };
+  const handleProtectedClick = () => setShowPopup(true);
 
-  // Format counts with a "+" suffix once loaded, "—" while loading
   function formatCount(n: number | null): string {
     if (n === null) return "—";
     return `${n.toLocaleString()}${n > 0 ? "+" : ""}`;
   }
 
   const stats = [
-    { value: formatCount(activeJobs),   label: "Active Jobs" },
-    { value: formatCount(restaurants),  label: "Restaurants" },
-    { value: "15,000+",                 label: "Job Seekers" },   // unchanged for now
-    { value: "98%",                     label: "Success Rate" },  // unchanged for now
+    { value: formatCount(activeJobs),  label: "Active Jobs" },
+    { value: formatCount(restaurants), label: "Restaurants" },
+    { value: formatCount(myApps),      label: "My Applications" },
+    { value: successRate ?? "0%",      label: "Success Rate" },
   ];
 
   return (
@@ -67,7 +72,6 @@ export default function Home() {
       <main className="flex flex-col flex-1">
         {/* Hero Section */}
         <section className="flex flex-col md:flex-row items-center justify-between px-10 md:px-20 py-16 gap-10 bg-[#faf8f5]">
-          {/* Left Content */}
           <div className="flex flex-col gap-6 max-w-lg">
             <h1 className="text-5xl font-bold leading-tight text-[#1a1a18]">
               Find Your Perfect{" "}
@@ -95,14 +99,12 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right Image */}
           <div className="relative w-full max-w-lg flex-shrink-0">
             <img
               src="/image/italian_restaurant.jpg"
               alt="Italian Restaurant"
               className="w-full h-[420px] object-cover rounded-2xl"
             />
-            {/* Floating Badge */}
             <div className="absolute bottom-[-20px] left-[-20px] bg-white rounded-2xl shadow-lg px-5 py-4 flex items-center gap-3">
               <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
                 <TrendingUp size={20} className="text-orange-500" />
@@ -140,7 +142,6 @@ export default function Home() {
             className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm mx-4 flex flex-col gap-5"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Top */}
             <div className="flex items-start justify-between">
               <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
                 <Briefcase size={24} className="text-orange-500" />
@@ -152,16 +153,12 @@ export default function Home() {
                 <X size={20} />
               </button>
             </div>
-
-            {/* Text */}
             <div className="flex flex-col gap-1.5">
               <h2 className="text-lg font-bold text-[#1a1a18]">Login Required</h2>
               <p className="text-sm text-[#888680]">
                 You should be logged in first to continue.
               </p>
             </div>
-
-            {/* Actions */}
             <div className="flex flex-col gap-2.5">
               <button
                 onClick={() => router.push("/auth/login")}
